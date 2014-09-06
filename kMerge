@@ -1,0 +1,113 @@
+/*************************************************************************
+ * Given K sorted arrays (of size O(N)), MERGE them into one sorted array
+ * 
+ * Naive implementation wherein merging array1 with array2, then the
+ * resultant with array3 and so on will take O(N.k^2) time and O(kN) memory
+ * apart from the resultant array memory.
+ * 
+ * A better solution than above would be to use divide and conquer where
+ * first merge all the k arrays taking 2 at time. Of the resultant k/2 merged
+ * arrays merge them again taking 2 at a time and so on. This improves the 
+ * run time to O(N.klgk) but there is not much improvement in terms of
+ * memory used (which is still O(kN) apart from the resultant array memory)
+ *
+ * The below solution implemented as kMerge class, is better than
+ * both above solutions. It uses a MIN HEAP to maintain (compare) the top
+ * elements of each array. Every iteration we remove the min element from
+ * the min heap and add the element from the corresponding array (if present).
+ * Runtime: O(N.klogk)
+ * Space (apart from resultant array): O(k)
+ *
+ * Implementation details:
+ * Language: C++
+ * Standard Libraries: STL
+ *************************************************************************/
+#include <iostream>
+#include <vector>
+#include <queue>
+using namespace std;
+
+class kMerge {
+public:
+	/* Merges k sorted arrays into 1 sorted array */
+	vector<int> mergeKSortedArrays(vector<vector <int>>& a)
+	{
+		vector<int> res;
+		unsigned int *currIdxArray = new unsigned int[a.size()];
+		/* Build a min heap of top elements of all the arrays */
+		priority_queue<pqElem, vector<pqElem>, myCmpPQ> minPQ;
+
+		for (unsigned int i = 0; i < a.size(); i++) {
+			pqElem pqVal(a[i][0], i);
+			minPQ.push(pqVal);
+			currIdxArray[i] = 1;
+		}
+
+		/* Now MERGE: pop the top most element of minPQ and fill it to res
+		   Then from the respective array add back to the minPQ */
+		while (minPQ.size()) {
+			pqElem pqVal = minPQ.top();
+			/* Copy to resultant array */
+			res.push_back(pqVal.val);
+			/* Push out the top element of PQ and fill with the next one
+			   from the same array if present */
+			int id = pqVal.arrayId;
+			minPQ.pop();
+			if (currIdxArray[id] < a[id].size()) {
+				pqVal.val = a[id][currIdxArray[id]];
+				pqVal.arrayId = id;
+				minPQ.push(pqVal);
+				/* Update curr pos of the array */
+				currIdxArray[id]++;
+			}
+		}
+		return res;
+	}
+private:
+	typedef struct pqElem {
+		int val; /* Key */
+		int arrayId;
+		pqElem(int val, int id): val(val), arrayId(id) {} 
+	};
+	class myCmpPQ {
+	public:
+		bool operator() (pqElem& a, pqElem& b) 
+		{
+			return (a.val > b.val);
+		}
+	};
+};
+
+/* Sample test program to test kMerge */
+int main ()
+{
+	kMerge merge;
+	vector <int> a1, a2, a3, a4, res;
+	vector<vector <int>> s;
+	a1.push_back(1);
+	a1.push_back(4);
+	a1.push_back(7);
+	a1.push_back(80);
+
+	a2.push_back(-80);
+	a2.push_back(-9);
+	a2.push_back(3);
+	a2.push_back(25);
+
+	a3.push_back(4);
+	a3.push_back(80);
+
+	a4.push_back(0);
+	a4.push_back(100);
+	/* 4 sorted arrays */
+	s.push_back(a1);
+	s.push_back(a2);
+	s.push_back(a3);
+	s.push_back(a4);
+
+	res = merge.mergeKSortedArrays(s);
+	for (unsigned int i = 0; i < (res.size() - 1); i++) {
+		cout << res[i]<< ", ";
+	}
+	cout << *(res.rbegin()) << endl;
+}
