@@ -54,6 +54,11 @@ private:
                 /* Move to another potential subtree where a combination
 				   can be found */
                 currVec.pop_back();
+                while((idx != candidates.size()) 
+	               && (candidates[idx] == candidates[idx-1])) {
+	               	/* Avoid duplicate solutions by pruning out same subtrees */
+					idx++;
+				}
             }
         }
     }
